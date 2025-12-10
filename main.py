@@ -60,17 +60,18 @@ def main():
     root = tk.Tk()
     root.title("Star Citizen Label Highlighter")
     root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+    root.configure(bg="#2E2E2E")  # Dark grey
 
     # Left frame for buttons
-    button_frame = tk.Frame(root)
+    button_frame = tk.Frame(root, bg="#2E2E2E")
     button_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
 
     # Right frame for text area
-    text_frame = tk.Frame(root)
+    text_frame = tk.Frame(root, bg="#2E2E2E")
     text_frame.pack(side=tk.RIGHT, expand=True, fill=tk.BOTH, padx=10, pady=10)
 
     # Text area with scroll
-    txt_area = scrolledtext.ScrolledText(text_frame, wrap='none')
+    txt_area = scrolledtext.ScrolledText(text_frame, wrap='none', bg="#4A4A4A", fg="#CCCCCC")
     txt_area.pack(expand=True, fill=tk.BOTH)
 
     # Load highlight.txt into text area
@@ -83,21 +84,24 @@ def main():
                               text="Highlight",
                               width=BUTTON_WIDTH_PX // 10,
                               height=BUTTON_HEIGHT_PX // 20,
-                              command=thread_highlight)
+                              command=thread_highlight,
+                              bg="#4A4A4A", fg="white", activebackground="#6A6A6A", activeforeground="white")
     btn_highlight.pack(pady=5)
 
     btn_backup = tk.Button(button_frame,
                            text="Backup",
                            width=BUTTON_WIDTH_PX // 10,
                            height=BUTTON_HEIGHT_PX // 20,
-                           command=backup_thread)
+                           command=backup_thread,
+                           bg="#4A4A4A", fg="white", activebackground="#6A6A6A", activeforeground="white")
     btn_backup.pack(pady=5)
 
     btn_restore = tk.Button(button_frame,
                             text="Restore",
                             width=BUTTON_WIDTH_PX // 10,
                             height=BUTTON_HEIGHT_PX // 20,
-                            command=restore_thread)
+                            command=restore_thread,
+                            bg="#4A4A4A", fg="white", activebackground="#6A6A6A", activeforeground="white")
     btn_restore.pack(pady=5)
 
     root.mainloop()
