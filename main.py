@@ -62,6 +62,7 @@ def main():
     root.title("Star Citizen Label Highlighter")
     root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
     root.configure(bg="#2E2E2E")  # Dark grey
+    root.bind('<Escape>', lambda e, w=root: w.destroy())
 
     # Left frame for buttons
     button_frame = tk.Frame(root, bg="#2E2E2E")
