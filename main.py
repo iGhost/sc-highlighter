@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import scrolledtext
+from pathlib import Path
 import threading
+import tempfile
 import shutil
 import os
 
@@ -11,7 +13,7 @@ BUTTON_HEIGHT_PX = 35
 
 # Paths
 HIGHLIGHT_FILE = "highlight.txt"
-INI_FILE = "global-small.ini"
+INI_FILE = "global.ini"
 BACKUP_DIR = "_backup"
 
 def load_highlight():
@@ -26,10 +28,35 @@ def load_highlight():
 def thread_highlight():
     """Highlight button: Run replacement function."""
     def task():
-        content = load_highlight()
+        content = thread_highlight_run()
         print("Highlight file contents:")
         print(content)
     threading.Thread(target=task, daemon=True).start()
+
+def thread_highlight_run():
+    """Highlight button: Run replacement function."""
+    source_file = Path(INI_FILE)
+    try:
+        input_lines = []
+        with open(HIGHLIGHT_FILE, "r", encoding="utf-8") as f:
+            input_lines = f.readlines()
+        input_lines = list(map(lambda l: l.strip().split('=')[0], input_lines))
+
+        with tempfile.NamedTemporaryFile('w', dir=source_file.parent, delete=False, encoding='utf-8') as tmp:
+            temp_file = Path(tmp.name)
+            with open(source_file, encoding='utf-8') as global_file:
+                for line in global_file:
+                    for pattern in input_lines:
+                        if line.startswith(pattern):
+                            line = line.split('=', 1)
+                            line = f"{line[0]}=<EM1>{line[1].strip()}</EM1>\n"
+                            break
+                    tmp.write(line)
+        os.replace(temp_file, INI_FILE)
+        return True
+    except Exception as e:
+        print(f"Error loading files: {e}")
+        return False
 
 def backup_thread():
     """Backup button: copy INI_FILE to BACKUP_DIR."""
