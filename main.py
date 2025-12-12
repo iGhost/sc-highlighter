@@ -14,6 +14,7 @@ BUTTON_HEIGHT_PX = 35
 # Paths
 HIGHLIGHT_FILE = "highlight.txt"
 INI_FILE = "global.ini"
+INI_FILE_PATH = "data\\Localization\\korean_(south_korea)"
 BACKUP_DIR = "_backup"
 
 def load_highlight():
@@ -29,13 +30,15 @@ def thread_highlight():
     """Highlight button: Run replacement function."""
     def task():
         content = thread_highlight_run()
-        print("Highlight file contents:")
-        print(content)
+        if content:
+            print('Done successfully')
+        else:
+            print('Failed')
     threading.Thread(target=task, daemon=True).start()
 
 def thread_highlight_run():
     """Highlight button: Run replacement function."""
-    source_file = Path(INI_FILE)
+    source_file = Path(os.path.join(INI_FILE_PATH, INI_FILE))
     try:
         input_lines = []
         with open(HIGHLIGHT_FILE, "r", encoding="utf-8") as f:
@@ -52,7 +55,7 @@ def thread_highlight_run():
                             line = f"{line[0]}=<EM1>{line[1].strip()}</EM1>\n"
                             break
                     tmp.write(line)
-        os.replace(temp_file, INI_FILE)
+        os.replace(temp_file, source_file)
         return True
     except Exception as e:
         print(f"Error loading files: {e}")
@@ -63,10 +66,10 @@ def backup_thread():
     def task():
         try:
             os.makedirs(BACKUP_DIR, exist_ok=True)
-            src = INI_FILE
+            src = os.path.join(INI_FILE_PATH, INI_FILE)
             dst = os.path.join(BACKUP_DIR, INI_FILE)
             shutil.copy2(src, dst)
-            print(f"Backed up {INI_FILE} to {dst}")
+            print(f"Backed up {INI_FILE} ({src}) to {dst}")
         except Exception as e:
             print(f"Backup failed: {e}")
     threading.Thread(target=task, daemon=True).start()
@@ -76,7 +79,7 @@ def restore_thread():
     def task():
         try:
             src = os.path.join(BACKUP_DIR, INI_FILE)
-            dst = INI_FILE
+            dst = os.path.join(INI_FILE_PATH, INI_FILE)
             shutil.copy2(src, dst)
             print(f"Restored {INI_FILE} from {src}")
         except Exception as e:
