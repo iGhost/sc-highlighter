@@ -18,7 +18,6 @@ INI_FILE_PATH = "data\\Localization\\korean_(south_korea)"
 BACKUP_DIR = "_backup"
 
 def load_highlight():
-    """TODO: Should surround labels with tags"""
     try:
         with open(HIGHLIGHT_FILE, "r", encoding="utf-8") as f:
             return f.read()
@@ -49,10 +48,10 @@ def thread_highlight_run():
             temp_file = Path(tmp.name)
             with open(source_file, encoding='utf-8') as global_file:
                 for line in global_file:
+                    line_dict = line.split('=', 1)
                     for pattern in input_lines:
-                        if line.startswith(pattern):
-                            line = line.split('=', 1)
-                            line = f"{line[0]}=<EM1>{line[1].strip()}</EM1>\n"
+                        if line_dict[0] == pattern:
+                            line = f"{line_dict[0]}=<EM1>{line_dict[1].strip()}</EM1>\n"
                             break
                     tmp.write(line)
         os.replace(temp_file, source_file)
