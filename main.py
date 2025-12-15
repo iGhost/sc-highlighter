@@ -38,6 +38,7 @@ class App:
                 self.flash(self.global_buttons['highlight'], color='green')
             else:
                 print('Failed')
+                self.flash(self.global_buttons['highlight'], color='red')
         threading.Thread(target=task, daemon=True).start()
 
     def thread_highlight_run(self):
@@ -74,8 +75,10 @@ class App:
                 dst = os.path.join(self.BACKUP_DIR, self.INI_FILE)
                 shutil.copy2(src, dst)
                 print(f"Backed up {self.INI_FILE} ({src}) to {dst}")
+                self.flash(self.global_buttons['backup'], color='green')
             except Exception as e:
                 print(f"Backup failed: {e}")
+                self.flash(self.global_buttons['backup'], color='red')
         threading.Thread(target=task, daemon=True).start()
 
     def restore_thread(self):
@@ -86,8 +89,10 @@ class App:
                 dst = os.path.join(self.INI_FILE_PATH, self.INI_FILE)
                 shutil.copy2(src, dst)
                 print(f"Restored {self.INI_FILE} from {src}||{dst}")
+                self.flash(self.global_buttons['restore'], color='green')
             except Exception as e:
                 print(f"Restore failed: {e}")
+                self.flash(self.global_buttons['restore'], color='red')
         threading.Thread(target=task, daemon=True).start()
 
     def flash(self, widget: tk.Widget, color: str, duration: int = 1000):
