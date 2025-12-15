@@ -23,8 +23,14 @@ class App:
 
     def load_highlight(self):
         try:
-            with open(self.HIGHLIGHT_FILE, "r", encoding="utf-8") as f:
-                return f.read()
+            if os.path.exists(self.HIGHLIGHT_FILE):
+                with open(self.HIGHLIGHT_FILE, "r", encoding="utf-8") as f:
+                    return f.read()
+            else:
+                with open(self.HIGHLIGHT_FILE, "w", encoding="utf-8") as f:
+                    new_file_content = "items_commodities_carinite_pure\nitems_commodities_carinite_raw"
+                    f.write(new_file_content)
+                    return new_file_content
         except Exception as e:
             print(f"Error loading {self.HIGHLIGHT_FILE}: {e}")
             return ""
