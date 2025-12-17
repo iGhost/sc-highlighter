@@ -19,7 +19,10 @@ class App:
     INI_FILE_PATH = "data\\Localization\\korean_(south_korea)"
     BACKUP_DIR = "_backup"
 
-    global_buttons = {}
+    def __init__(self):
+        self.root = None
+        self.buttons = {}
+        self.txt_area = None
 
     def load_highlight(self):
         try:
@@ -41,10 +44,10 @@ class App:
             content = self.thread_highlight_run()
             if content:
                 print('Done successfully')
-                self.flash(self.global_buttons['highlight'], color='green')
+                self.flash(self.buttons['highlight'], color='green')
             else:
                 print('Failed')
-                self.flash(self.global_buttons['highlight'], color='red')
+                self.flash(self.buttons['highlight'], color='red')
         threading.Thread(target=task, daemon=True).start()
 
     def thread_highlight_run(self):
@@ -81,10 +84,10 @@ class App:
                 dst = os.path.join(self.BACKUP_DIR, self.INI_FILE)
                 shutil.copy2(src, dst)
                 print(f"Backed up {self.INI_FILE} ({src}) to {dst}")
-                self.flash(self.global_buttons['backup'], color='green')
+                self.flash(self.buttons['backup'], color='green')
             except Exception as e:
                 print(f"Backup failed: {e}")
-                self.flash(self.global_buttons['backup'], color='red')
+                self.flash(self.buttons['backup'], color='red')
         threading.Thread(target=task, daemon=True).start()
 
     def restore_thread(self):
@@ -95,10 +98,10 @@ class App:
                 dst = os.path.join(self.INI_FILE_PATH, self.INI_FILE)
                 shutil.copy2(src, dst)
                 print(f"Restored {self.INI_FILE} from {src}||{dst}")
-                self.flash(self.global_buttons['restore'], color='green')
+                self.flash(self.buttons['restore'], color='green')
             except Exception as e:
                 print(f"Restore failed: {e}")
-                self.flash(self.global_buttons['restore'], color='red')
+                self.flash(self.buttons['restore'], color='red')
         threading.Thread(target=task, daemon=True).start()
 
     def flash(self, widget: tk.Widget, color: str, duration: int = 1000):
@@ -107,34 +110,9 @@ class App:
         widget.config(bg=color)
         widget.after(duration, lambda: widget.config(bg=old_bg))
 
-    def main(self):
-        root = tk.Tk()
-        root.minsize(338, 338)
-        root.title("Star Citizen Label Highlighter")
-        root.geometry(f"{self.WINDOW_WIDTH}x{self.WINDOW_HEIGHT}")
-        root.configure(bg="#2E2E2E")
-        root.bind('<Escape>', lambda e, w=root: w.destroy())
-        root.iconbitmap('assets\\icon.ico')
-
-        # Top frame for buttons
-        button_frame = tk.Frame(root, bg="#2E2E2E")
-        button_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
-
-        # Main frame for text area
-        text_frame = tk.Frame(root, bg="#2E2E2E", borderwidth=2, relief="sunken")
-        text_frame.pack(side=tk.BOTTOM, expand=True, fill=tk.BOTH, padx=10, pady=10)
-
-        # Text area with scroll
-        txt_area = scrolledtext.ScrolledText(text_frame, wrap='none', bg="#4A4A4A", fg="#CCCCCC")
-        txt_area.pack(expand=True, fill=tk.BOTH)
-
-        # Load highlight.txt into text area
-        initial_text = self.load_highlight()
-        txt_area.insert(tk.END, initial_text)
-        txt_area.config(state=tk.DISABLED)
-
-        # Button and callbacks
-        btn_highlight = tk.Button(button_frame,
+    def create_buttons(self, parent):
+        """Create all buttons and add to global_buttons dictionary."""
+        btn_highlight = tk.Button(parent,
                                   text="Highlight",
                                   width=self.BUTTON_WIDTH,
                                   height=self.BUTTON_HEIGHT_PX // 20,
@@ -143,7 +121,7 @@ class App:
                                   font=('Arial', 10, 'bold'))
         btn_highlight.pack(side=tk.LEFT)
 
-        btn_restore = tk.Button(button_frame,
+        btn_restore = tk.Button(parent,
                                 text="Restore global.ini",
                                 width=self.BUTTON_WIDTH,
                                 height=self.BUTTON_HEIGHT_PX // 20,
@@ -151,21 +129,53 @@ class App:
                                 bg="#4A4A4A", fg="white", activebackground="#6A6A6A", activeforeground="white")
         btn_restore.pack(side=tk.RIGHT)
 
-        btn_backup = tk.Button(button_frame,
+        btn_backup = tk.Button(parent,
                                text="Backup global.ini",
                                width=self.BUTTON_WIDTH,
                                height=self.BUTTON_HEIGHT_PX // 20,
                                command=self.backup_thread,
                                bg="#4A4A4A", fg="white", activebackground="#6A6A6A", activeforeground="white")
-        btn_backup.pack(side=tk.RIGHT)
+        btn_backup.pack(side=tk.RIGHT, padx=5)
 
-        self.global_buttons = {
+        self.buttons = {
             'highlight': btn_highlight,
             'restore': btn_restore,
             'backup': btn_backup
         }
 
-        root.mainloop()
+    def main(self):
+        self.root = tk.Tk()
+        self.root.minsize(338, 338)
+        self.root.title("Star Citizen Label Highlighter")
+        self.root.geometry(f"{self.WINDOW_WIDTH}x{self.WINDOW_HEIGHT}")
+        self.root.configure(bg="#2E2E2E")
+        self.root.bind('<Escape>', lambda e, w=self.root: w.destroy())
+        
+        try:
+            self.root.iconbitmap('assets\\icon.ico')
+        except tk.TclError:
+            print("Warning: Could not load icon file")
+
+        # Top frame for buttons
+        button_frame = tk.Frame(self.root, bg="#2E2E2E")
+        button_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
+
+        # Main frame for text area
+        text_frame = tk.Frame(self.root, bg="#2E2E2E")
+        text_frame.pack(side=tk.BOTTOM, expand=True, fill=tk.BOTH, padx=10, pady=10)
+
+        # Text area with scroll
+        self.txt_area = scrolledtext.ScrolledText(text_frame, wrap='none', bg="#4A4A4A", fg="#CCCCCC")
+        self.txt_area.pack(expand=True, fill=tk.BOTH)
+
+        # Load highlight.txt into text area
+        initial_text = self.load_highlight()
+        self.txt_area.insert(tk.END, initial_text)
+        self.txt_area.config(state=tk.DISABLED)
+
+        self.create_buttons(button_frame)
+
+        self.root.mainloop()
 
 if __name__ == "__main__":
     app = App()
