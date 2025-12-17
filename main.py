@@ -36,7 +36,7 @@ class App:
             return ""
 
     def thread_highlight(self):
-        """Highlight button: Run replacement function."""
+        """Highlight button: Run replacement function in thread."""
         def task():
             content = self.thread_highlight_run()
             if content:
@@ -48,7 +48,7 @@ class App:
         threading.Thread(target=task, daemon=True).start()
 
     def thread_highlight_run(self):
-        """Highlight button: Run replacement function."""
+        """Replacement function."""
         source_file = Path(os.path.join(self.INI_FILE_PATH, self.INI_FILE))
         try:
             input_lines = []
@@ -102,6 +102,7 @@ class App:
         threading.Thread(target=task, daemon=True).start()
 
     def flash(self, widget: tk.Widget, color: str, duration: int = 1000):
+        """Flash specified button with specified color"""
         old_bg = widget.cget("bg")
         widget.config(bg=color)
         widget.after(duration, lambda: widget.config(bg=old_bg))
@@ -115,12 +116,12 @@ class App:
         root.bind('<Escape>', lambda e, w=root: w.destroy())
         root.iconbitmap('assets\\icon.ico')
 
-        # Left frame for buttons
+        # Top frame for buttons
         button_frame = tk.Frame(root, bg="#2E2E2E")
         button_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
 
-        # Right frame for text area
-        text_frame = tk.Frame(root, bg="#2E2E2E")
+        # Main frame for text area
+        text_frame = tk.Frame(root, bg="#2E2E2E", borderwidth=2, relief="sunken")
         text_frame.pack(side=tk.BOTTOM, expand=True, fill=tk.BOTH, padx=10, pady=10)
 
         # Text area with scroll
