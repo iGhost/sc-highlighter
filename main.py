@@ -10,7 +10,7 @@ import os
 class App:
     WINDOW_WIDTH = 500
     WINDOW_HEIGHT = 600
-    BUTTON_WIDTH_PX = 130
+    BUTTON_WIDTH = 15
     BUTTON_HEIGHT_PX = 35
 
     # Paths
@@ -63,7 +63,7 @@ class App:
                         line_dict = line.split('=', 1)
                         for pattern in input_lines:
                             if line_dict[0] == pattern:
-                                line = f"{line_dict[0]}=<EM1>{line_dict[1].strip()}</EM1>\n"
+                                line = f"{line_dict[0]}=<EM3>{line_dict[1].strip()}</EM3>\n"
                                 break
                         tmp.write(line)
             os.replace(temp_file, source_file)
@@ -111,8 +111,9 @@ class App:
         root.minsize(338, 338)
         root.title("Star Citizen Label Highlighter")
         root.geometry(f"{self.WINDOW_WIDTH}x{self.WINDOW_HEIGHT}")
-        root.configure(bg="#2E2E2E")  # Dark grey
+        root.configure(bg="#2E2E2E")
         root.bind('<Escape>', lambda e, w=root: w.destroy())
+        root.iconbitmap('assets\\icon.ico')
 
         # Left frame for buttons
         button_frame = tk.Frame(root, bg="#2E2E2E")
@@ -134,7 +135,7 @@ class App:
         # Button and callbacks
         btn_highlight = tk.Button(button_frame,
                                   text="Highlight",
-                                  width=self.BUTTON_WIDTH_PX // 10,
+                                  width=self.BUTTON_WIDTH,
                                   height=self.BUTTON_HEIGHT_PX // 20,
                                   command=self.thread_highlight,
                                   bg="#4A4A4A", fg="white", activebackground="#6A6A6A", activeforeground="white",
@@ -142,16 +143,16 @@ class App:
         btn_highlight.pack(side=tk.LEFT)
 
         btn_restore = tk.Button(button_frame,
-                                text="Restore",
-                                width=self.BUTTON_WIDTH_PX // 10,
+                                text="Restore global.ini",
+                                width=self.BUTTON_WIDTH,
                                 height=self.BUTTON_HEIGHT_PX // 20,
                                 command=self.restore_thread,
                                 bg="#4A4A4A", fg="white", activebackground="#6A6A6A", activeforeground="white")
         btn_restore.pack(side=tk.RIGHT)
 
         btn_backup = tk.Button(button_frame,
-                               text="Backup",
-                               width=self.BUTTON_WIDTH_PX // 10,
+                               text="Backup global.ini",
+                               width=self.BUTTON_WIDTH,
                                height=self.BUTTON_HEIGHT_PX // 20,
                                command=self.backup_thread,
                                bg="#4A4A4A", fg="white", activebackground="#6A6A6A", activeforeground="white")
