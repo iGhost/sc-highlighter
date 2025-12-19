@@ -171,6 +171,8 @@ cython_debug/
 .pypirc
 
 # local working files
+/venv*
+/_backup
 /highlight.txt
 /global.ini
 /global-small.ini

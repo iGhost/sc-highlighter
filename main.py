@@ -1,5 +1,4 @@
 import tkinter as tk
-from tkinter import scrolledtext
 from pathlib import Path
 import threading
 import tempfile
@@ -12,9 +11,11 @@ class App:
     WINDOW_HEIGHT = 600
     BUTTON_WIDTH = 15
     BUTTON_HEIGHT_PX = 35
+    DEFAULT_EM_TAG = 3
 
     # Paths
-    HIGHLIGHT_FILE = "highlight.txt"
+    HIGHLIGHT_FILE = "my_items.txt"
+    HIGHLIGHT_DIR = "highlights"
     INI_FILE = "global.ini"
     INI_FILE_PATH = "data\\Localization\\korean_(south_korea)"
     BACKUP_DIR = "_backup"
@@ -23,6 +24,27 @@ class App:
         self.root = None
         self.buttons = {}
         self.txt_area = None
+        self.text_files = []
+
+    def count_lines(self, file_path: Path) -> int:
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                return sum(1 for _ in f)
+        except:
+            return 0
+
+    def preload_files(self):
+        load_dir = Path(self.HIGHLIGHT_DIR)
+        os.makedirs(load_dir, exist_ok=True)
+        self.text_files = [str(p) for p in load_dir.glob("*.txt") if p.is_file()]
+        if len(self.text_files) > 0:
+            self.text_files = list(map(lambda f: {'file': f, 'lines': self.count_lines(f), 'tag': self.DEFAULT_EM_TAG}, self.text_files))
+        else:
+            new_file = os.path.join(load_dir, self.HIGHLIGHT_FILE)
+            with open(new_file, "w", encoding="utf-8") as f:
+                f.write("items_commodities_carinite_pure\nitems_commodities_carinite_raw")
+            self.text_files = [{'file': new_file, 'lines': 2, 'tag': self.DEFAULT_EM_TAG}]
+        print(f"Found text files: {len(self.text_files)}")
 
     def load_highlight(self):
         try:
@@ -43,10 +65,10 @@ class App:
         def task():
             content = self.thread_highlight_run()
             if content:
-                print('Done successfully')
+                print('Replaced successfully')
                 self.flash(self.buttons['highlight'], color='green')
             else:
-                print('Failed')
+                print('Replacement failed')
                 self.flash(self.buttons['highlight'], color='red')
         threading.Thread(target=task, daemon=True).start()
 
@@ -55,9 +77,11 @@ class App:
         source_file = Path(os.path.join(self.INI_FILE_PATH, self.INI_FILE))
         try:
             input_lines = []
-            with open(self.HIGHLIGHT_FILE, "r", encoding="utf-8") as f:
-                input_lines = f.readlines()
-            input_lines = list(map(lambda l: l.strip().split('=')[0], input_lines))
+            for file in self.text_files:
+                with open(file['file'], "r", encoding="utf-8") as f:
+                    input_lines.extend(f.readlines())
+            input_lines = list(set(map(lambda l: l.strip().split('=')[0], input_lines)))
+            print(f"Extracted {len(input_lines)} lines")
 
             with tempfile.NamedTemporaryFile('w', dir=source_file.parent, delete=False, encoding='utf-8') as tmp:
                 temp_file = Path(tmp.name)
@@ -66,7 +90,7 @@ class App:
                         line_dict = line.split('=', 1)
                         for pattern in input_lines:
                             if line_dict[0] == pattern:
-                                line = f"{line_dict[0]}=<EM3>{line_dict[1].strip()}</EM3>\n"
+                                line = f"{line_dict[0]}=<EM{file['tag']}>{line_dict[1].strip()}</EM{file['tag']}>\n"
                                 break
                         tmp.write(line)
             os.replace(temp_file, source_file)
@@ -83,7 +107,7 @@ class App:
                 src = os.path.join(self.INI_FILE_PATH, self.INI_FILE)
                 dst = os.path.join(self.BACKUP_DIR, self.INI_FILE)
                 shutil.copy2(src, dst)
-                print(f"Backed up {self.INI_FILE} ({src}) to {dst}")
+                print(f"Backed up \"{self.INI_FILE}\" (\"{src}\") to \"{dst}\"")
                 self.flash(self.buttons['backup'], color='green')
             except Exception as e:
                 print(f"Backup failed: {e}")
@@ -97,7 +121,7 @@ class App:
                 src = os.path.join(self.BACKUP_DIR, self.INI_FILE)
                 dst = os.path.join(self.INI_FILE_PATH, self.INI_FILE)
                 shutil.copy2(src, dst)
-                print(f"Restored {self.INI_FILE} from {src}||{dst}")
+                print(f"Restored \"{self.INI_FILE}\" (\"{src}\") to \"{dst}\"")
                 self.flash(self.buttons['restore'], color='green')
             except Exception as e:
                 print(f"Restore failed: {e}")
@@ -145,7 +169,7 @@ class App:
 
     def main(self):
         self.root = tk.Tk()
-        self.root.minsize(338, 338)
+        self.root.minsize(392, 338)
         self.root.title("Star Citizen Label Highlighter")
         self.root.geometry(f"{self.WINDOW_WIDTH}x{self.WINDOW_HEIGHT}")
         self.root.configure(bg="#2E2E2E")
@@ -160,20 +184,12 @@ class App:
         button_frame = tk.Frame(self.root, bg="#2E2E2E")
         button_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
 
-        # Main frame for text area
-        text_frame = tk.Frame(self.root, bg="#2E2E2E")
+        # Main frame for file list
+        text_frame = tk.Frame(self.root, bg="#2E2E2E", borderwidth=2, relief="sunken")
         text_frame.pack(side=tk.BOTTOM, expand=True, fill=tk.BOTH, padx=10, pady=10)
 
-        # Text area with scroll
-        self.txt_area = scrolledtext.ScrolledText(text_frame, wrap='none', bg="#4A4A4A", fg="#CCCCCC")
-        self.txt_area.pack(expand=True, fill=tk.BOTH)
-
-        # Load highlight.txt into text area
-        initial_text = self.load_highlight()
-        self.txt_area.insert(tk.END, initial_text)
-        self.txt_area.config(state=tk.DISABLED)
-
         self.create_buttons(button_frame)
+        self.preload_files()
 
         self.root.mainloop()
 
