@@ -38,13 +38,24 @@ class App:
         os.makedirs(load_dir, exist_ok=True)
         self.text_files = [str(p) for p in load_dir.glob("*.txt") if p.is_file()]
         if len(self.text_files) > 0:
-            self.text_files = list(map(lambda f: {'file': f, 'lines': self.count_lines(f), 'tag': self.DEFAULT_EM_TAG}, self.text_files))
+            self.text_files = list(
+                map(lambda f: {'file': f, 'lines': self.count_lines(f), 'tag': self.DEFAULT_EM_TAG, 'check': tk.BooleanVar(value=True)},
+                    self.text_files))
         else:
             new_file = os.path.join(load_dir, self.HIGHLIGHT_FILE)
             with open(new_file, "w", encoding="utf-8") as f:
                 f.write("items_commodities_carinite_pure\nitems_commodities_carinite_raw")
-            self.text_files = [{'file': new_file, 'lines': 2, 'tag': self.DEFAULT_EM_TAG}]
+            self.text_files = [{'file': new_file, 'lines': 2, 'tag': self.DEFAULT_EM_TAG, 'check': tk.BooleanVar(value=True)}]
         print(f"Found text files: {len(self.text_files)}")
+
+    def create_file_checkboxes(self, frame):
+        for i, file in enumerate(self.text_files):
+            checkbox = tk.Checkbutton(
+                frame, text=file['file'], variable=self.text_files[i]['check'],
+                selectcolor="#2E2E2E", activebackground="#6A6A6A", activeforeground="#CCCCCC",
+                bg="#2E2E2E", fg="#CCCCCC",
+            )
+            checkbox.pack(anchor="nw", padx=5, pady=1)
 
     def load_highlight(self):
         try:
@@ -77,7 +88,7 @@ class App:
         source_file = Path(os.path.join(self.INI_FILE_PATH, self.INI_FILE))
         try:
             input_lines = []
-            for file in self.text_files:
+            for file in [f for f in self.text_files if f['check'].get()]:
                 with open(file['file'], "r", encoding="utf-8") as f:
                     input_lines.extend(f.readlines())
             input_lines = list(set(map(lambda l: l.strip().split('=')[0], input_lines)))
@@ -174,7 +185,7 @@ class App:
         self.root.geometry(f"{self.WINDOW_WIDTH}x{self.WINDOW_HEIGHT}")
         self.root.configure(bg="#2E2E2E")
         self.root.bind('<Escape>', lambda e, w=self.root: w.destroy())
-        
+
         try:
             self.root.iconbitmap('assets\\icon.ico')
         except tk.TclError:
@@ -190,6 +201,7 @@ class App:
 
         self.create_buttons(button_frame)
         self.preload_files()
+        self.create_file_checkboxes(text_frame)
 
         self.root.mainloop()
 
