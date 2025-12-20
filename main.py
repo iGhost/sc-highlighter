@@ -1,13 +1,15 @@
 import tkinter as tk
 from pathlib import Path
+import webbrowser
 import threading
 import tempfile
 import shutil
+import sys
 import os
 
 
 class App:
-    WINDOW_WIDTH = 500
+    WINDOW_WIDTH = 520
     WINDOW_HEIGHT = 600
     BUTTON_WIDTH = 15
     BUTTON_HEIGHT_PX = 35
@@ -145,6 +147,9 @@ class App:
         widget.config(bg=color)
         widget.after(duration, lambda: widget.config(bg=old_bg))
 
+    def send_to_url(self, url):
+        webbrowser.open_new(url)
+
     def create_buttons(self, parent):
         """Create all buttons and add to global_buttons dictionary."""
         btn_highlight = tk.Button(parent,
@@ -172,6 +177,18 @@ class App:
                                bg="#4A4A4A", fg="white", activebackground="#6A6A6A", activeforeground="white")
         btn_backup.pack(side=tk.RIGHT, padx=5)
 
+        lbl_link_discord = tk.Label(parent,
+                               text="Discord 🔗", cursor="hand2",
+                               bg="#2E2E2E", fg="white", activebackground="#6A6A6A", activeforeground="white")
+        lbl_link_discord.pack(side=tk.RIGHT, padx=5)
+        lbl_link_discord.bind("<Button-1>", lambda e: self.send_to_url("https://discord.gg/3VVJ8vRKpr"))
+
+        lbl_link_site = tk.Label(parent,
+                               text="Site 🔗", cursor="hand2",
+                               bg="#2E2E2E", fg="white", activebackground="#6A6A6A", activeforeground="white")
+        lbl_link_site.pack(side=tk.RIGHT, padx=5)
+        lbl_link_site.bind("<Button-1>", lambda e: self.send_to_url("https://www.expanseunion.com/corp/expanseutility/"))
+
         self.buttons = {
             'highlight': btn_highlight,
             'restore': btn_restore,
@@ -181,13 +198,18 @@ class App:
     def main(self):
         self.root = tk.Tk()
         self.root.minsize(392, 338)
-        self.root.title("Star Citizen Label Highlighter")
+        self.root.title("Highlight My Items | Expanse Utility от людей в тапках")
         self.root.geometry(f"{self.WINDOW_WIDTH}x{self.WINDOW_HEIGHT}")
         self.root.configure(bg="#2E2E2E")
         self.root.bind('<Escape>', lambda e, w=self.root: w.destroy())
 
+        if getattr(sys, "frozen", False):
+            base_path = sys._MEIPASS
+        else:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+
         try:
-            self.root.iconbitmap('assets\\icon.ico')
+            self.root.iconbitmap(os.path.join(base_path, "assets", "icon.ico"))
         except tk.TclError:
             print("Warning: Could not load icon file")
 
