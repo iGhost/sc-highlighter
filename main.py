@@ -31,7 +31,7 @@ class App:
     def count_lines(self, file_path: Path) -> int:
         try:
             with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-                return sum(1 for _ in f)
+                return sum(1 for l in f if l.strip() != '')
         except:
             return 0
 
@@ -53,25 +53,11 @@ class App:
     def create_file_checkboxes(self, frame):
         for i, file in enumerate(self.text_files):
             checkbox = tk.Checkbutton(
-                frame, text=file['file'], variable=self.text_files[i]['check'],
+                frame, text=f"{file['file']}  ({file['lines']})", variable=self.text_files[i]['check'],
                 selectcolor="#2E2E2E", activebackground="#6A6A6A", activeforeground="#CCCCCC",
                 bg="#2E2E2E", fg="#CCCCCC",
             )
             checkbox.pack(anchor="nw", padx=5, pady=1)
-
-    def load_highlight(self):
-        try:
-            if os.path.exists(self.HIGHLIGHT_FILE):
-                with open(self.HIGHLIGHT_FILE, "r", encoding="utf-8") as f:
-                    return f.read()
-            else:
-                with open(self.HIGHLIGHT_FILE, "w", encoding="utf-8") as f:
-                    new_file_content = "items_commodities_carinite_pure\nitems_commodities_carinite_raw"
-                    f.write(new_file_content)
-                    return new_file_content
-        except Exception as e:
-            print(f"Error loading {self.HIGHLIGHT_FILE}: {e}")
-            return ""
 
     def thread_highlight(self):
         """Highlight button: Run replacement function in thread."""
@@ -92,8 +78,8 @@ class App:
             input_lines = []
             for file in [f for f in self.text_files if f['check'].get()]:
                 with open(file['file'], "r", encoding="utf-8") as f:
-                    input_lines.extend(f.readlines())
-            input_lines = list(set(map(lambda l: l.strip().split('=')[0], input_lines)))
+                    input_lines.extend([l.strip() for l in f if l.strip() != ''])
+            input_lines = list(set(map(lambda l: l.split('=')[0], input_lines)))
             print(f"Extracted {len(input_lines)} lines")
 
             with tempfile.NamedTemporaryFile('w', dir=source_file.parent, delete=False, encoding='utf-8') as tmp:
