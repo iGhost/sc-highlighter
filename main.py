@@ -178,7 +178,7 @@ class App:
                                text="Site 🔗", cursor="hand2",
                                bg="#2E2E2E", fg="white", activebackground="#6A6A6A", activeforeground="white")
         lbl_link_site.pack(side=tk.RIGHT, padx=5)
-        lbl_link_site.bind("<Button-1>", lambda e: self.send_to_url("https://www.expanseunion.com/corp/expanseutility/"))
+        lbl_link_site.bind("<Button-1>", lambda e: self.send_to_url("https://www.expanseunion.com/sc/expanseutility"))
 
         self.buttons = {
             'highlight': btn_highlight,
