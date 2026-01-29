@@ -41,9 +41,13 @@ class App:
         os.makedirs(load_dir, exist_ok=True)
         self.text_files = [str(p) for p in load_dir.glob("*.txt") if p.is_file()]
         if len(self.text_files) > 0:
+            checkbox_state = True if len(self.text_files) == 1 else False
             self.text_files = list(
-                map(lambda f: {'file': f, 'lines': self.count_lines(f), 'tag': self.DEFAULT_EM_TAG, 'check': tk.BooleanVar(value=True)},
-                    self.text_files))
+                map(lambda f: {'file': f, 'lines': self.count_lines(f), 'tag': self.DEFAULT_EM_TAG,
+                               'check': tk.BooleanVar(value=checkbox_state)}, self.text_files))
+            for item in self.text_files:
+                if item['file'].endswith(self.HIGHLIGHT_FILE):
+                    item['check'] = tk.BooleanVar(value=True)
         else:
             new_file = os.path.join(load_dir, self.HIGHLIGHT_FILE)
             with open(new_file, "w", encoding="utf-8") as f:
