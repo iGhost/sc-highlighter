@@ -1,5 +1,6 @@
 import tkinter as tk
 from pathlib import Path
+from src.version import __version__
 import webbrowser
 import threading
 import tempfile
@@ -182,9 +183,10 @@ class App:
         }
 
     def main(self):
+        self.current_version = __version__
         self.root = tk.Tk()
         self.root.minsize(392, 338)
-        self.root.title("Highlight My Items | Expanse Utility от людей в тапках")
+        self.root.title(f"Highlight My Items v{self.current_version} | Expanse Utility от людей в тапках")
         self.root.geometry(f"{self.WINDOW_WIDTH}x{self.WINDOW_HEIGHT}")
         self.root.configure(bg="#2E2E2E")
         self.root.bind('<Escape>', lambda e, w=self.root: w.destroy())
