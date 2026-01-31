@@ -17,6 +17,7 @@ class App:
     BUTTON_HEIGHT_PX = 35
     DEFAULT_EM_TAG = 4
     colors_dict = {
+        1: "Blue",
         2: "Green",
         3: "Yellow",
         4: "Red",
@@ -197,7 +198,7 @@ class App:
 
         self.colors_combo = ttk.Combobox(parent, values=list(self.colors_dict.values()), state="readonly", width=17)
         self.colors_combo.pack(side=tk.LEFT, padx=5, pady=5)
-        self.colors_combo.current(2)
+        self.colors_combo.current(3)
 
     def main(self):
         self.current_version = __version__
