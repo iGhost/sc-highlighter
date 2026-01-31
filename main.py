@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 from pathlib import Path
 from src.version import __version__
 import webbrowser
@@ -14,7 +15,12 @@ class App:
     WINDOW_HEIGHT = 600
     BUTTON_WIDTH = 15
     BUTTON_HEIGHT_PX = 35
-    DEFAULT_EM_TAG = 3
+    DEFAULT_EM_TAG = 4
+    colors_dict = {
+        2: "Green",
+        3: "Yellow",
+        4: "Red",
+    }
 
     # Paths
     HIGHLIGHT_FILE = "my_items.txt"
@@ -28,6 +34,7 @@ class App:
         self.buttons = {}
         self.txt_area = None
         self.text_files = []
+        self.colors_combo = None
 
     def count_lines(self, file_path: Path) -> int:
         try:
@@ -78,8 +85,11 @@ class App:
 
     def thread_highlight_run(self):
         """Replacement function."""
+        color_to_key = {v: k for k, v in self.colors_dict.items()}
+
         source_file = Path(os.path.join(self.INI_FILE_PATH, self.INI_FILE))
         try:
+            tag_number = color_to_key[self.colors_combo.get()]
             input_lines = []
             for file in [f for f in self.text_files if f['check'].get()]:
                 with open(file['file'], "r", encoding="utf-8") as f:
@@ -94,7 +104,7 @@ class App:
                         line_dict = line.split('=', 1)
                         for pattern in input_lines:
                             if line_dict[0] == pattern:
-                                line = f"{line_dict[0]}=<EM{file['tag']}>{line_dict[1].strip()}</EM{file['tag']}>\n"
+                                line = f"{line_dict[0]}=<EM{tag_number}>{line_dict[1].strip()}</EM{tag_number}>\n"
                                 break
                         tmp.write(line)
             os.replace(temp_file, source_file)
@@ -168,23 +178,26 @@ class App:
                                bg="#4A4A4A", fg="white", activebackground="#6A6A6A", activeforeground="white")
         btn_backup.pack(side=tk.RIGHT, padx=5)
 
-        lbl_link_discord = tk.Label(parent,
-                               text="Discord 🔗", cursor="hand2",
-                               bg="#2E2E2E", fg="white", activebackground="#6A6A6A", activeforeground="white")
-        lbl_link_discord.pack(side=tk.RIGHT, padx=5)
-        lbl_link_discord.bind("<Button-1>", lambda e: self.send_to_url("https://discord.gg/3VVJ8vRKpr"))
-
-        lbl_link_site = tk.Label(parent,
-                               text="Site 🔗", cursor="hand2",
-                               bg="#2E2E2E", fg="white", activebackground="#6A6A6A", activeforeground="white")
-        lbl_link_site.pack(side=tk.RIGHT, padx=5)
-        lbl_link_site.bind("<Button-1>", lambda e: self.send_to_url("https://www.expanseunion.com/sc/expanseutility"))
-
         self.buttons = {
             'highlight': btn_highlight,
             'restore': btn_restore,
             'backup': btn_backup
         }
+
+    def create_second_row(self, parent):
+        lbl_link_discord = tk.Label(parent, text="Discord 🔗", cursor="hand2",
+                               bg="#2E2E2E", fg="white", activebackground="#6A6A6A", activeforeground="white")
+        lbl_link_discord.pack(side=tk.RIGHT, padx=5)
+        lbl_link_discord.bind("<Button-1>", lambda e: self.send_to_url("https://discord.gg/3VVJ8vRKpr"))
+
+        lbl_link_site = tk.Label(parent, text="Site 🔗", cursor="hand2",
+                               bg="#2E2E2E", fg="white", activebackground="#6A6A6A", activeforeground="white")
+        lbl_link_site.pack(side=tk.RIGHT, padx=5)
+        lbl_link_site.bind("<Button-1>", lambda e: self.send_to_url("https://www.expanseunion.com/sc/expanseutility"))
+
+        self.colors_combo = ttk.Combobox(parent, values=list(self.colors_dict.values()), state="readonly", width=17)
+        self.colors_combo.pack(side=tk.LEFT, padx=5, pady=5)
+        self.colors_combo.current(2)
 
     def main(self):
         self.current_version = __version__
@@ -207,13 +220,19 @@ class App:
 
         # Top frame for buttons
         button_frame = tk.Frame(self.root, bg="#2E2E2E")
-        button_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
+        button_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=(10, 0))
 
-        # Main frame for file list
+        # Second row frame for combobox and links
+        second_frame = tk.Frame(self.root, bg="#2E2E2E", borderwidth=2, relief="flat", height=35)
+        second_frame.pack(side=tk.TOP, expand=False, fill=tk.BOTH, padx=4, pady=0)
+        second_frame.pack_propagate(False)
+
+        # Bottom frame for file list
         text_frame = tk.Frame(self.root, bg="#2E2E2E", borderwidth=2, relief="sunken")
-        text_frame.pack(side=tk.BOTTOM, expand=True, fill=tk.BOTH, padx=10, pady=10)
+        text_frame.pack(side=tk.BOTTOM, expand=True, fill=tk.BOTH, padx=10, pady=(0, 10))
 
         self.create_buttons(button_frame)
+        self.create_second_row(second_frame)
         self.preload_files()
         self.create_file_checkboxes(text_frame)
 
