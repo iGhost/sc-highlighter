@@ -261,7 +261,7 @@ class App:
         lbl_link_discord = tk.Label(parent, text="Discord 🔗", cursor="hand2",
                                bg="#2E2E2E", fg="white", activebackground="#6A6A6A", activeforeground="white")
         lbl_link_discord.pack(side=tk.RIGHT, padx=5)
-        lbl_link_discord.bind("<Button-1>", lambda e: self.send_to_url("https://discord.gg/3VVJ8vRKpr"))
+        lbl_link_discord.bind("<Button-1>", lambda e: self.send_to_url("https://discord.gg/69X4YZPjht"))
 
         lbl_link_site = tk.Label(parent, text="Site 🔗", cursor="hand2",
                                bg="#2E2E2E", fg="white", activebackground="#6A6A6A", activeforeground="white")
