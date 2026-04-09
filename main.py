@@ -36,6 +36,11 @@ class App:
         self.txt_area = None
         self.text_files = []
         self.colors_combo = None
+        self.file_list_canvas = None
+        self.file_list_scrollbar = None
+        self.file_list_inner = None
+        self.file_list_window = None
+        self.file_list_scrollbar_visible = False
 
     def count_lines(self, file_path: Path) -> int:
         try:
@@ -71,6 +76,54 @@ class App:
                 bg="#2E2E2E", fg="#CCCCCC",
             )
             checkbox.pack(anchor="nw", padx=5, pady=1)
+
+    def create_scrollable_file_list(self, parent):
+        self.file_list_canvas = tk.Canvas(parent, bg="#2E2E2E", highlightthickness=0, borderwidth=0)
+        self.file_list_canvas.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
+
+        self.file_list_scrollbar = tk.Scrollbar(parent, orient=tk.VERTICAL, command=self.file_list_canvas.yview)
+        self.file_list_canvas.configure(yscrollcommand=self.file_list_scrollbar.set)
+
+        self.file_list_inner = tk.Frame(self.file_list_canvas, bg="#2E2E2E")
+        self.file_list_window = self.file_list_canvas.create_window((0, 0), window=self.file_list_inner, anchor="nw")
+
+        self.file_list_inner.bind("<Configure>", self.update_file_list_scrollregion)
+        self.file_list_canvas.bind("<Configure>", self.on_file_list_canvas_configure)
+        self.file_list_canvas.bind("<MouseWheel>", self.on_file_list_mousewheel)
+        self.file_list_inner.bind("<MouseWheel>", self.on_file_list_mousewheel)
+
+        self.create_file_checkboxes(self.file_list_inner)
+        self.update_file_list_scrollbar()
+
+    def update_file_list_scrollregion(self, _event=None):
+        self.file_list_canvas.configure(scrollregion=self.file_list_canvas.bbox("all"))
+        self.update_file_list_scrollbar()
+
+    def on_file_list_canvas_configure(self, event):
+        self.file_list_canvas.itemconfigure(self.file_list_window, width=event.width)
+        self.update_file_list_scrollbar()
+
+    def on_file_list_mousewheel(self, event):
+        if not self.file_list_canvas or not self.file_list_scrollbar_visible:
+            return
+
+        self.file_list_canvas.yview_scroll(int(-event.delta / 120), "units")
+
+    def update_file_list_scrollbar(self):
+        if not self.file_list_canvas or not self.file_list_scrollbar or not self.file_list_inner:
+            return
+
+        scroll_region = self.file_list_canvas.bbox("all")
+        content_height = scroll_region[3] - scroll_region[1] if scroll_region else 0
+        viewport_height = self.file_list_canvas.winfo_height()
+        needs_scrollbar = content_height > viewport_height
+
+        if needs_scrollbar and not self.file_list_scrollbar_visible:
+            self.file_list_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+            self.file_list_scrollbar_visible = True
+        elif not needs_scrollbar and self.file_list_scrollbar_visible:
+            self.file_list_scrollbar.pack_forget()
+            self.file_list_scrollbar_visible = False
 
     def thread_highlight(self):
         """Highlight button: Run replacement function in thread."""
@@ -235,7 +288,7 @@ class App:
         self.create_buttons(button_frame)
         self.create_second_row(second_frame)
         self.preload_files()
-        self.create_file_checkboxes(text_frame)
+        self.create_scrollable_file_list(text_frame)
 
         self.root.mainloop()
 
