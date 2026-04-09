@@ -41,6 +41,7 @@ class App:
         self.file_list_inner = None
         self.file_list_window = None
         self.file_list_scrollbar_visible = False
+        self.file_list_menu = None
 
     def count_lines(self, file_path: Path) -> int:
         try:
@@ -75,7 +76,21 @@ class App:
                 selectcolor="#2E2E2E", activebackground="#6A6A6A", activeforeground="#CCCCCC",
                 bg="#2E2E2E", fg="#CCCCCC",
             )
+            checkbox.bind("<Button-3>", self.show_file_list_menu)
             checkbox.pack(anchor="nw", padx=5, pady=1)
+
+    def set_all_file_checks(self, checked: bool):
+        for file in self.text_files:
+            file['check'].set(checked)
+
+    def show_file_list_menu(self, event):
+        if not self.file_list_menu:
+            return
+
+        try:
+            self.file_list_menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            self.file_list_menu.grab_release()
 
     def create_scrollable_file_list(self, parent):
         self.file_list_canvas = tk.Canvas(parent, bg="#2E2E2E", highlightthickness=0, borderwidth=0)
@@ -86,11 +101,15 @@ class App:
 
         self.file_list_inner = tk.Frame(self.file_list_canvas, bg="#2E2E2E")
         self.file_list_window = self.file_list_canvas.create_window((0, 0), window=self.file_list_inner, anchor="nw")
+        self.file_list_menu = tk.Menu(self.root, tearoff=0)
+        self.file_list_menu.add_command(label="Select all", command=lambda: self.set_all_file_checks(True))
+        self.file_list_menu.add_command(label="Select none", command=lambda: self.set_all_file_checks(False))
 
         self.file_list_inner.bind("<Configure>", self.update_file_list_scrollregion)
         self.file_list_canvas.bind("<Configure>", self.on_file_list_canvas_configure)
         self.file_list_canvas.bind("<MouseWheel>", self.on_file_list_mousewheel)
         self.file_list_inner.bind("<MouseWheel>", self.on_file_list_mousewheel)
+        self.file_list_inner.bind("<Button-3>", self.show_file_list_menu)
 
         self.create_file_checkboxes(self.file_list_inner)
         self.update_file_list_scrollbar()
