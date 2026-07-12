@@ -354,12 +354,13 @@ class App:
     def main(self):
         self.current_version = __version__
         self.root = tk.Tk()
-        self.determine_current_language()
         self.root.minsize(392, 338)
         self.root.title(f"Highlight My Items v{self.current_version} | Expanse Utility от людей в тапках")
         self.root.geometry(f"{self.WINDOW_WIDTH}x{self.WINDOW_HEIGHT}")
         self.root.configure(bg="#2E2E2E")
-        self.root.bind('<Escape>', lambda e, w=self.root: w.destroy())
+        self.determine_current_language()
+        self.root.bind_all('<Escape>', lambda e, w=self.root: w.destroy())
+        self.root.after_idle(self.root.focus_force)
 
         if getattr(sys, "frozen", False):
             base_path = sys._MEIPASS
