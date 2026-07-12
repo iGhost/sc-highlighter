@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox, ttk
 from pathlib import Path
 from src.version import __version__
 import webbrowser
@@ -27,7 +27,9 @@ class App:
     HIGHLIGHT_FILE = "my_items.txt"
     HIGHLIGHT_DIR = "highlights"
     INI_FILE = "global.ini"
-    INI_FILE_PATH = "data\\Localization\\korean_(south_korea)"
+    USER_CFG_FILE = "user.cfg"
+    LOCALIZATION_DIR = "data\\Localization"
+    DEFAULT_LANGUAGE = "english"
     BACKUP_DIR = "_backup"
 
     def __init__(self):
@@ -42,6 +44,7 @@ class App:
         self.file_list_window = None
         self.file_list_scrollbar_visible = False
         self.file_list_menu = None
+        self.current_language = None
 
     def count_lines(self, file_path: Path) -> int:
         try:
@@ -49,6 +52,70 @@ class App:
                 return sum(1 for l in f if l.strip() != '')
         except:
             return 0
+
+    def read_user_cfg_language(self):
+        cfg_path = Path(self.USER_CFG_FILE)
+        if not cfg_path.is_file():
+            return None
+
+        try:
+            with open(cfg_path, "r", encoding="utf-8", errors="ignore") as cfg_file:
+                for line in cfg_file:
+                    stripped_line = line.strip()
+                    if not stripped_line or stripped_line.startswith(("#", ";")):
+                        continue
+
+                    line_parts = stripped_line.split("=", 1)
+                    if len(line_parts) != 2:
+                        continue
+
+                    key = line_parts[0].strip().lower()
+                    if key != "g_language":
+                        continue
+
+                    language = line_parts[1].strip().strip("\"'")
+                    return language or None
+        except Exception as e:
+            print(f"Failed to read \"{self.USER_CFG_FILE}\": {e}")
+
+        return None
+
+    def determine_current_language(self):
+        localization_dir = Path(self.LOCALIZATION_DIR)
+        fallback_ini_path = localization_dir / self.DEFAULT_LANGUAGE / self.INI_FILE
+        language = self.read_user_cfg_language()
+
+        if language:
+            language_path = Path(language)
+            if language_path.name != language or language_path.drive:
+                print(f"Language \"{language}\" from \"{self.USER_CFG_FILE}\" is not a valid localization directory")
+            else:
+                global_ini_path = localization_dir / language / self.INI_FILE
+                if global_ini_path.is_file():
+                    self.current_language = language
+                    print(f"Determined: {language}")
+                    return
+
+                print(
+                    f"Error: \"{self.INI_FILE}\" was not found for language \"{language}\". "
+                    f"Falling back to \"{self.DEFAULT_LANGUAGE}\"."
+                )
+
+        if not fallback_ini_path.is_file():
+            messagebox.showerror(
+                "Language error",
+                f"{self.INI_FILE} for language \"{self.DEFAULT_LANGUAGE}\" was not found.",
+                parent=self.root,
+            )
+            return
+
+        self.current_language = self.DEFAULT_LANGUAGE
+
+    def get_global_ini_path(self):
+        return Path(self.LOCALIZATION_DIR) / self.current_language / self.INI_FILE
+
+    def get_backup_ini_path(self):
+        return Path(self.BACKUP_DIR) / self.current_language / self.INI_FILE
 
     def preload_files(self):
         load_dir = Path(self.HIGHLIGHT_DIR)
@@ -146,6 +213,10 @@ class App:
 
     def thread_highlight(self):
         """Highlight button: Run replacement function in thread."""
+        if not self.current_language:
+            self.flash(self.buttons['highlight'], color='red')
+            return
+
         def task():
             content = self.thread_highlight_run()
             if content:
@@ -160,7 +231,7 @@ class App:
         """Replacement function."""
         color_to_key = {v: k for k, v in self.colors_dict.items()}
 
-        source_file = Path(os.path.join(self.INI_FILE_PATH, self.INI_FILE))
+        source_file = self.get_global_ini_path()
         try:
             tag_number = color_to_key[self.colors_combo.get()]
             input_lines = []
@@ -188,11 +259,15 @@ class App:
 
     def backup_thread(self):
         """Backup button: copy INI_FILE to BACKUP_DIR."""
+        if not self.current_language:
+            self.flash(self.buttons['backup'], color='red')
+            return
+
         def task():
             try:
-                os.makedirs(self.BACKUP_DIR, exist_ok=True)
-                src = os.path.join(self.INI_FILE_PATH, self.INI_FILE)
-                dst = os.path.join(self.BACKUP_DIR, self.INI_FILE)
+                src = self.get_global_ini_path()
+                dst = self.get_backup_ini_path()
+                os.makedirs(dst.parent, exist_ok=True)
                 shutil.copy2(src, dst)
                 print(f"Backed up \"{self.INI_FILE}\" (\"{src}\") to \"{dst}\"")
                 self.flash(self.buttons['backup'], color='green')
@@ -203,10 +278,14 @@ class App:
 
     def restore_thread(self):
         """Restore button: copy INI_FILE from BACKUP_DIR."""
+        if not self.current_language:
+            self.flash(self.buttons['restore'], color='red')
+            return
+
         def task():
             try:
-                src = os.path.join(self.BACKUP_DIR, self.INI_FILE)
-                dst = os.path.join(self.INI_FILE_PATH, self.INI_FILE)
+                src = self.get_backup_ini_path()
+                dst = self.get_global_ini_path()
                 shutil.copy2(src, dst)
                 print(f"Restored \"{self.INI_FILE}\" (\"{src}\") to \"{dst}\"")
                 self.flash(self.buttons['restore'], color='green')
@@ -275,6 +354,7 @@ class App:
     def main(self):
         self.current_version = __version__
         self.root = tk.Tk()
+        self.determine_current_language()
         self.root.minsize(392, 338)
         self.root.title(f"Highlight My Items v{self.current_version} | Expanse Utility от людей в тапках")
         self.root.geometry(f"{self.WINDOW_WIDTH}x{self.WINDOW_HEIGHT}")
