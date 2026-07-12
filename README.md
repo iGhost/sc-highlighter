@@ -1,5 +1,7 @@
 # Highlight My Items
 
+[English version](README.en.md)
+
 **Highlight My Items** — утилита для **Star Citizen**, позволяющая изменять цвет наименований предметов в игре на основе пользовательских списков.
 
 ![Main application window](https://cp.expanseunion.com/media/highlighter_main_window_thin.png)
